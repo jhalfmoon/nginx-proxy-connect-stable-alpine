@@ -1,18 +1,18 @@
 # List of available tags: https://hub.docker.com/_/alpine
-FROM alpine:3.18
+FROM alpine:3.20
 
 # apk upgrade in a separate layer (musl is huge)
 RUN apk upgrade --no-cache --update
 
 # Bring in tzdata and runtime libs into their own layer
-RUN apk add --no-cache --update tzdata pcre zlib libssl1.1
+RUN apk add --no-cache --update tzdata pcre zlib libssl3
 
-# If set to 1, enables building debug version of nginx, which is super-useful, but also heavy to build.
+# If set to 1, enables building debug version of nginx, which is super-useful, but also heavy to build
 ARG DEBUG_BUILD="1"
 ENV DO_DEBUG_BUILD="$DEBUG_BUILD"
 
 # List of available releases: https://nginx.org/download/
-ENV NGINX_VERSION 1.25.2
+ENV NGINX_VERSION 1.26.0
 
 # nginx layer
 RUN CONFIG="\
