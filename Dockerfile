@@ -1,5 +1,5 @@
 # List of available tags: https://hub.docker.com/_/alpine
-FROM alpine:3.20
+FROM alpine:3.20.3
 
 # apk upgrade in a separate layer (musl is huge)
 RUN apk upgrade --no-cache --update
@@ -12,7 +12,7 @@ ARG DEBUG_BUILD="1"
 ENV DO_DEBUG_BUILD="$DEBUG_BUILD"
 
 # List of available releases: https://nginx.org/download/
-ENV NGINX_VERSION 1.26.0
+ENV NGINX_VERSION=1.27.2
 
 # nginx layer
 RUN CONFIG="\
