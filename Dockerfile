@@ -1,3 +1,7 @@
+# NOTE: Besides the alpine image and nginx source, there is also another external resource used:
+#       https://github.com/chobits/ngx_http_proxy_connect_module.git
+#       The reason this is mentioned is because it too might need updating now and then.
+
 # List of available tags: https://hub.docker.com/_/alpine
 FROM alpine:3.20.3
 
@@ -54,9 +58,12 @@ RUN CONFIG="\
 	&& addgroup -S nginx \
 	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
 	&& apk add --no-cache --update --virtual .build-deps gcc libc-dev make openssl-dev pcre-dev zlib-dev linux-headers patch curl git  \
- 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
+	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& git clone https://github.com/chobits/ngx_http_proxy_connect_module.git /usr/src/ngx_http_proxy_connect_module \
-	&& cd /usr/src/ngx_http_proxy_connect_module && export PROXY_CONNECT_MODULE_PATH="$(pwd)" && cd - \
+	&& cd /usr/src/ngx_http_proxy_connect_module \
+	&& git checkout v0.0.7 \
+	&& export PROXY_CONNECT_MODULE_PATH="$(pwd)" \
+	&& cd - \
 	&& CONFIG="$CONFIG --add-module=$PROXY_CONNECT_MODULE_PATH" \
 	&& mkdir -p /usr/src \
 	&& tar -zxC /usr/src -f nginx.tar.gz \
