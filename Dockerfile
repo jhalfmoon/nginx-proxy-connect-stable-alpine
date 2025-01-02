@@ -8,18 +8,27 @@ FROM alpine:3.21.0
 # List of available releases: https://nginx.org/download/
 ENV NGINX_VERSION=1.27.3
 
+# https://github.com/chobits/ngx_http_proxy_connect_module.git
+ENV NGINX_CONNECT_MODULE_VER=v0.0.7
+
 # apk upgrade in a separate layer (musl is huge)
-RUN apk upgrade --no-cache --update
+RUN \
+	--mount=type=cache,mode=0755,target=/var/cache/apk \
+    apk upgrade --cache-max-age 120
 
 # Bring in tzdata and runtime libs into their own layer
-RUN apk add --no-cache --update tzdata pcre zlib libssl3
+RUN \
+	--mount=type=cache,mode=0755,target=/var/cache/apk \
+    apk add --update --cache-max-age 120 tzdata pcre zlib libssl3
 
 # If set to 1, enables building debug version of nginx, which is super-useful, but also heavy to build
 ARG DEBUG_BUILD="1"
 ENV DO_DEBUG_BUILD="$DEBUG_BUILD"
 
 # nginx layer
-RUN CONFIG="\
+RUN \
+	--mount=type=cache,mode=0755,target=/var/cache/apk \
+	CONFIG="\
 		--prefix=/etc/nginx \
 		--sbin-path=/usr/sbin/nginx \
 		--modules-path=/usr/lib/nginx/modules \
@@ -57,11 +66,11 @@ RUN CONFIG="\
 	" \
 	&& addgroup -S nginx \
 	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
-	&& apk add --no-cache --update --virtual .build-deps gcc libc-dev make openssl-dev pcre-dev zlib-dev linux-headers patch curl git  \
+	&& apk add --update --cache-max-age 120 --virtual .build-deps gcc libc-dev make openssl-dev pcre-dev zlib-dev linux-headers patch curl git \
 	&& curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& git clone https://github.com/chobits/ngx_http_proxy_connect_module.git /usr/src/ngx_http_proxy_connect_module \
 	&& cd /usr/src/ngx_http_proxy_connect_module \
-	&& git checkout v0.0.7 \
+	&& git checkout ${NGINX_CONNECT_MODULE_VER} \
 	&& export PROXY_CONNECT_MODULE_PATH="$(pwd)" \
 	&& cd - \
 	&& CONFIG="$CONFIG --add-module=$PROXY_CONNECT_MODULE_PATH" \
@@ -70,8 +79,8 @@ RUN CONFIG="\
 	&& rm nginx.tar.gz \
 	&& cd /usr/src/nginx-$NGINX_VERSION \
 	&& patch -p1 < $PROXY_CONNECT_MODULE_PATH/patch/proxy_connect_rewrite_102101.patch \
-	&& [ "a$DO_DEBUG_BUILD" == "a1" ] && { echo "Bulding DEBUG" &&  ./configure $CONFIG --with-debug && make -j$(getconf _NPROCESSORS_ONLN) && mv objs/nginx objs/nginx-debug ; } || { echo "Not building debug"; } \
-	&& { echo "Bulding RELEASE" && ./configure $CONFIG  && make -j$(getconf _NPROCESSORS_ONLN) && make install; } \
+	&& [ "a$DO_DEBUG_BUILD" == "a1" ] && { echo "Building DEBUG" &&  ./configure $CONFIG --with-debug && make -j$(getconf _NPROCESSORS_ONLN) && mv objs/nginx objs/nginx-debug ; } || { echo "Not building debug"; } \
+	&& { echo "Building RELEASE" && ./configure $CONFIG  && make -j$(getconf _NPROCESSORS_ONLN) && make install; } \
 	&& ls -laR objs/addon/ngx_http_proxy_connect_module/ \
 	&& rm -rf /etc/nginx/html/ \
 	&& mkdir /etc/nginx/conf.d/ \
@@ -85,7 +94,8 @@ RUN CONFIG="\
 	&& rm -rf /usr/src/nginx-$NGINX_VERSION \
 	\
 	# Remove -dev apks and sources
-	&& apk del .build-deps gcc libc-dev make openssl-dev pcre-dev zlib-dev linux-headers patch curl git && rm -rf /usr/src \
+	&& apk del .build-deps \
+    && rm -rf /usr/src \
 	\
 	# forward request and error logs to docker log collector
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
