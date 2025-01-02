@@ -3,7 +3,10 @@
 #       The reason this is mentioned is because it too might need updating now and then.
 
 # List of available tags: https://hub.docker.com/_/alpine
-FROM alpine:3.20.3
+FROM alpine:3.21.0
+
+# List of available releases: https://nginx.org/download/
+ENV NGINX_VERSION=1.27.3
 
 # apk upgrade in a separate layer (musl is huge)
 RUN apk upgrade --no-cache --update
@@ -14,9 +17,6 @@ RUN apk add --no-cache --update tzdata pcre zlib libssl3
 # If set to 1, enables building debug version of nginx, which is super-useful, but also heavy to build
 ARG DEBUG_BUILD="1"
 ENV DO_DEBUG_BUILD="$DEBUG_BUILD"
-
-# List of available releases: https://nginx.org/download/
-ENV NGINX_VERSION=1.27.2
 
 # nginx layer
 RUN CONFIG="\

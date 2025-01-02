@@ -20,7 +20,7 @@ IMAGE_NAME="nginx-proxy-connect-stable-alpine:nginx-${NGINX_VER}-alpine-${ALPINE
 #
 # docker builder prune --all --force
 
-docker build \
+time docker build \
     --progress=plain \
     --build-arg DEBUG_BUILD=1 \
     -t $IMAGE_NAME \
