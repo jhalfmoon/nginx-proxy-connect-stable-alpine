@@ -1,3 +1,7 @@
+This is a fork of https://github.com/rpardini/nginx-proxy-connect-stable-alpine.git .
+
+The goal of this fork is to keep dependencies up to date.
+
 # nginx:stable-alpine + proxy_connect
 
 Upstreams: 
