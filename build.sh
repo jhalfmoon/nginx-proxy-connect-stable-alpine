@@ -2,7 +2,8 @@
 
 # This script is mainly meant to help develop / debug this image build
 
-DOCKER_PROXY_DEBUG=1
+# Use the environment variable if it is set, otherwise default to 0
+DOCKER_PROXY_DEBUG=${DOCKER_PROXY_DEBUG:-0}
 
 if [[ DOCKER_PROXY_DEBUG -eq 1 ]] ; then
     IMAGE_SUFFIX='-debug'
